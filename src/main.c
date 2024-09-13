@@ -1,52 +1,101 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <SDL2/SDL.h>
+#include "./constants.h"
 
-int main(int argc, char* argv[]) {
+int is_running = false;
+SDL_Window *window = NULL;
+SDL_Renderer *renderer = NULL;
+
+/* initialize_window: initializes SDL and then creates window with given
+params , then creates a renderer.
+returns the state of the window -> 0 or 1 */
+bool initialize_window(void) {
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-        printf("SDL Init Error: %s\n",SDL_GetError());
-        return 1;
+        fprintf(stderr, "SDL Init Error: \n");
+        return false;
     }
-
-    SDL_Window *window = SDL_CreateWindow("Test", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_SHOWN);
-
-    if(window == NULL) {
-        printf("SDL CreateWindow Error: %s\n",SDL_GetError());
+    
+    window = SDL_CreateWindow(
+        "Test",  // window name
+        SDL_WINDOWPOS_CENTERED, // x axis for window to appear 
+        SDL_WINDOWPOS_CENTERED,  // y axis to appear
+        WINDOW_WIDTH, 
+        WINDOW_HEIGHT , 
+        SDL_WINDOW_SHOWN  // flags
+    );
+     
+    if(!window) {
+        fprintf(stderr, "SDL CreateWindow Error\n");
         SDL_Quit();
-        return 1;
+        return false;
     }
 
-    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    renderer = SDL_CreateRenderer(
+        window, 
+        -1, // chose a driver: -1 is set to default
+        SDL_RENDERER_ACCELERATED // flags
+        | SDL_RENDERER_PRESENTVSYNC
+    );
 
-    if (renderer == NULL) {
+    // destroy window if error on renderer creation
+    if (!renderer) {
         SDL_DestroyWindow(window);
-        printf("SDL_CreateRenderer Error: %s\n", SDL_GetError());
+        fprintf(stderr, "SDL_CreateRenderer Error\n");
         SDL_Quit();
-        return 1;
+        return false;
     }
 
+    return true;
+}
+
+void process_input() {
     SDL_Event event;
-    int running = 1;
-    while (running) {
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) {
-                running = 0;
+    SDL_PollEvent(&event);
+
+    switch (event.type) {
+        case SDL_QUIT:
+            is_running = false;
+            break;
+        case SDL_KEYDOWN:
+            if (event.key.keysym.sym == SDLK_ESCAPE) {
+                is_running = false;
+                break;
             }
-        }
-
-        // Clear the screen
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // black
-        SDL_RenderClear(renderer);
-
-    // Present the renderer to the screen
-        SDL_RenderPresent(renderer);
     }
+}
 
+void update() {
+    //TODO:
+}
+
+void render() {
+    //TODO:
+}
+
+/* destroy_window: cleaning up processes after exiting main loop
+destroys current renderer ,window and quits SDL */
+void destroy_window(void) {
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
+}
 
-
-
+int main(int argc, char* argv[]) {
+    // Set global is_running to current state of the window 
+    is_running = initialize_window();
+    
+    // main game loop outputs current frame
+    // cahnges behavior based on inputs processed
+    // breaks: is_running -> 1 on window close or ESC input
+    while(is_running) {
+        process_input();
+        update();
+        render();
+    }
+    // Cleanup process on exiting main loop
+    destroy_window();
+     
     return EXIT_SUCCESS;
 }
