@@ -1,0 +1,25 @@
+# Compiled object files
+*.o
+
+# Executable files
+build/debug/
+
+# Build directories
+/build/
+
+# Dependency files
+*.d
+
+# Logs and temporary files
+*.log
+*~
+
+# Symlinks to SDL2 libraries
+/include/SDL2
+/include/SDL2_image
+/lib/SDL2_image
+
+# IDE and editor specific files
+.vscode/
+.idea/
+
